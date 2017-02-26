@@ -1,0 +1,46 @@
+def fillDefaults(signingConfig) {
+	signingConfig.storeFile = file('someMissingFile.keystore')
+	signingConfig.storePassword = ''
+	signingConfig.storeType = ''
+	signingConfig.keyAlias = ''
+	signingConfig.keyPassword = ''
+}
+
+def setupSigning(signingConfig) {
+	def signingProperties = "signing.properties"
+	def signingKeys = [
+		storeFile     : {x -> file(x)},
+		storePassword : {x -> x},
+		storeType     : {x -> x},
+		keyAlias      : {x -> x},
+		keyPassword   : {x -> x},
+	]
+
+	// Find signing.properties in project root, or in $HOME/.gradle
+	def f = ["${rootDir}/${signingProperties}", "${gradle.gradleUserHomeDir}/${signingProperties}"].find { file(it).exists() }
+
+	if (f) {
+		println "Loading signing properties from ${f}"
+		def props = new Properties()
+		props.load(new FileInputStream(f))
+
+		// For each property apply it to the release signing config
+		signingKeys.any { k, fn ->
+			if (!props.containsKey(k)) {
+				println "Missing property ${k}"
+				fillDefaults(signingConfig)
+				return true
+			} else {
+				signingConfig[k] = fn(props[k]);
+			}
+			return
+		}
+	} else {
+		println "Missing ${signingProperties} file"
+		fillDefaults(signingConfig)
+	}
+}
+
+ext {
+	setupSigning = this.&setupSigning
+}
