@@ -1,6 +1,7 @@
 def fillDefaults(signingConfig) {
 	signingConfig.storeFile = file('Recoil.jks')
 	signingConfig.storePassword = 'recoil_lock'
+	signingConfig.storeType = 'JKS'
 	signingConfig.keyAlias = 'Recoil'
 	signingConfig.keyPassword = 'recoil_lock'
 }
